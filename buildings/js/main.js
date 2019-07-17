@@ -8,7 +8,7 @@ let g = d3.select('#chart-area')
         .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom)
             .append('g')
-                .attr('transform', `translate(${margin.left}, ${margin.top})`)
+                .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
 // X Label
 g.append('text')
@@ -18,7 +18,6 @@ g.append('text')
     .attr('font-size', '20px')
     .attr('text-anchor', 'middle')
     .text("World's Tallest Buildings");
-
 // Y Label
 g.append('text')
     .attr('class', 'y-axis-label')
