@@ -11,6 +11,23 @@ let g = d3.select('#chart-area')
   .append('g')
     .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
+// Add X Axis
+let xAxisGroup = g.append('g')
+  .attr('class', 'x-axis')
+  .attr('transform', `translate(0, ${height})`)
+  
+// Add Y Axis
+let yAxisGroup = g.append('g')
+  .attr('class', 'y-axis')
+
+const x = d3.scaleBand()
+  .range([0, width])
+  .paddingInner(0.3)
+  .paddingOuter(0.3);
+
+const y = d3.scaleLinear()
+  .range([height, 0]);
+
 // X Label
 g.append('text')
   .attr('class', 'x-label')
@@ -32,41 +49,36 @@ g.append('text')
 
 // read in data
 d3.json('data/revenues.json').then(data => {
+
+  d3.interval(() => update(data), 1000);
+  // run for the first time
+  update(data); 
+    
+}).catch(error => console.log(error));
+
+
+function update(data) {
+  /* Takes object data and generates a bar chart
+  of appropriate size and scaling.
+  */
   const months = data.map(elm => elm.month);
   const max_ = d3.max(data, elm => elm.revenue);
-  
-  // create rects/bars
-  let rects = g.selectAll('rect').data(data);
-  
-  // create scalar functions scale values to fit dimensions of chart
-  const x = d3.scaleBand()
-    .domain(months)
-    .range([0, width])
-    .paddingInner(0.3)
-    .paddingOuter(0.3);
+  x.domain(months);
+  y.domain([0, max_]);
 
-  const y = d3.scaleLinear()
-    .domain([0, max_])
-    .range([height, 0]);
-  
   // Create Axes
   const xAxisCall = d3.axisBottom(x);
+    xAxisGroup.call(xAxisCall);
+
   const yAxisCall = d3.axisLeft(y)
     .ticks(5)
     .tickFormat(val => '$' + val);
-  
-  // Add X Axis
-  g.append('g')
-    .attr('class', 'x-axis')
-    .attr('transform', `translate(0, ${height})`)
-    .call(xAxisCall);
-  
-  // Add Y Axis
-  g.append('g')
-    .attr('class', 'y-axis')
-    .call(yAxisCall);
+  yAxisGroup.call(yAxisCall);
   
   // add rectangles
+  // create rects/bars
+  let rects = g.selectAll('rect').data(data);
+
   rects.enter()
     .append('rect')
     .attr('x', elm => x(elm.month))
@@ -74,6 +86,4 @@ d3.json('data/revenues.json').then(data => {
     .attr('width', x.bandwidth)
     .attr('height', elm => height - y(elm.revenue))
     .attr('fill', 'green');
-
-}).catch(error => console.log(error));
-
+}
