@@ -2,6 +2,7 @@
 const margin = {left: 100, right: 10, top: 10, bottom: 150};
 const width = 600 - margin.left - margin.right;
 const height = 400 - margin.top - margin.bottom;
+let flag = true;
 
 // create svg inside a group
 let g = d3.select('#chart-area')
@@ -38,7 +39,7 @@ g.append('text')
   .text('Month');
 
 // Y Label
-g.append('text')
+yLabel = g.append('text')
   .attr('class', 'y-label')
   .attr('x', - (height / 2))
   .attr('y', -60)
@@ -49,8 +50,11 @@ g.append('text')
 
 // read in data
 d3.json('data/revenues.json').then(data => {
+  d3.interval(() => {
+    update(data);
+    flag = !flag;
+  }, 1000);
 
-  d3.interval(() => update(data), 1000);
   // run for the first time
   update(data); 
     
@@ -62,6 +66,7 @@ function update(data) {
   of appropriate size and scaling.
   */
   const months = data.map(elm => elm.month);
+  const val = flag ? 'revenue' : 'profit';
   const max_ = d3.max(data, elm => elm.revenue);
   x.domain(months);
   y.domain([0, max_]);
@@ -75,15 +80,24 @@ function update(data) {
     .tickFormat(val => '$' + val);
   yAxisGroup.call(yAxisCall);
   
-  // add rectangles
-  // create rects/bars
+  // JOIN
   let rects = g.selectAll('rect').data(data);
-
+  // REMOVE
+  rects.exit().remove();
+  // UPDATE
+  rects
+    .attr('x', elm => x(elm.month))
+    .attr('y', elm => y(elm[val]))
+    .attr('width', x.bandwidth)
+    .attr('height', elm => height - y(elm[val]));
+  // ENTER
   rects.enter()
     .append('rect')
     .attr('x', elm => x(elm.month))
-    .attr('y', elm => y(elm.revenue))
+    .attr('y', elm => y(elm[val]))
     .attr('width', x.bandwidth)
-    .attr('height', elm => height - y(elm.revenue))
+    .attr('height', elm => height - y(elm[val]))
     .attr('fill', 'green');
+  
+  yLabel.text(val);
 }
