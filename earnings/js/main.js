@@ -84,7 +84,7 @@ function update(data) {
   
   // JOIN
   let rects = g.selectAll('rect')
-    .data(data, d => d.data);
+    .data(data, d => d.month);
   // REMOVE
   rects.exit()
     .attr('fill', 'red')
@@ -103,12 +103,12 @@ function update(data) {
     .attr('y', y(0))
     .attr('height', 0)
     .attr('x', elm => x(elm.month))
-    .attr('width', x.bandwidth)
+    .attr('width', x.bandwidth())
     .merge(rects)
     .transition(t)
       .attr('x', elm => x(elm.month))
       .attr('y', elm => y(elm[val]))
-      .attr('width', x.bandwidth)
+      .attr('width', x.bandwidth())
       .attr('height', elm => height - y(elm[val]));
   
   yText = val.slice(0, 1).toLocaleUpperCase() + val.slice(1);
