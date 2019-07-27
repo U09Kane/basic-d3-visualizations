@@ -3,6 +3,7 @@ const margin = {left: 100, right: 10, top: 10, bottom: 150};
 const width = 600 - margin.left - margin.right;
 const height = 400 - margin.top - margin.bottom;
 let flag = true;
+const t = d3.transition().duration(500);
 
 // create svg inside a group
 let g = d3.select('#chart-area')
@@ -51,7 +52,8 @@ yLabel = g.append('text')
 // read in data
 d3.json('data/revenues.json').then(data => {
   d3.interval(() => {
-    update(data);
+    newData = flag ? data : data.slice(1);
+    update(newData);
     flag = !flag;
   }, 1000);
 
@@ -67,37 +69,48 @@ function update(data) {
   */
   const months = data.map(elm => elm.month);
   const val = flag ? 'revenue' : 'profit';
-  const max_ = d3.max(data, elm => elm.revenue);
+  const max_ = d3.max(data, elm => elm[val]);
   x.domain(months);
   y.domain([0, max_]);
 
   // Create Axes
   const xAxisCall = d3.axisBottom(x);
-    xAxisGroup.call(xAxisCall);
+  xAxisGroup.transition(t).call(xAxisCall);
 
   const yAxisCall = d3.axisLeft(y)
-    .ticks(5)
+    // .ticks(5)
     .tickFormat(val => '$' + val);
-  yAxisGroup.call(yAxisCall);
+  yAxisGroup.transition(t).call(yAxisCall);
   
   // JOIN
-  let rects = g.selectAll('rect').data(data);
+  let rects = g.selectAll('rect')
+    .data(data, d => d.data);
   // REMOVE
-  rects.exit().remove();
+  rects.exit()
+    .attr('fill', 'red')
+    .transition(t)
+    .attr('y', y(0))
+    .attr('height', 0)
+    .remove();
+
   // UPDATE
-  rects
-    .attr('x', elm => x(elm.month))
-    .attr('y', elm => y(elm[val]))
-    .attr('width', x.bandwidth)
-    .attr('height', elm => height - y(elm[val]));
+  // rects.transition(t)
+ 
   // ENTER
   rects.enter()
     .append('rect')
+    .attr('fill', 'green')
+    .attr('y', y(0))
+    .attr('height', 0)
     .attr('x', elm => x(elm.month))
-    .attr('y', elm => y(elm[val]))
     .attr('width', x.bandwidth)
-    .attr('height', elm => height - y(elm[val]))
-    .attr('fill', 'green');
+    .merge(rects)
+    .transition(t)
+      .attr('x', elm => x(elm.month))
+      .attr('y', elm => y(elm[val]))
+      .attr('width', x.bandwidth)
+      .attr('height', elm => height - y(elm[val]));
   
-  yLabel.text(val);
+  yText = val.slice(0, 1).toLocaleUpperCase() + val.slice(1);
+  yLabel.text(yText);
 }
