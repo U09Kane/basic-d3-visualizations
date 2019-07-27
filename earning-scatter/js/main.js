@@ -83,33 +83,29 @@ function update(data) {
   yAxisGroup.transition(t).call(yAxisCall);
   
   // JOIN
-  let rects = g.selectAll('rect')
-    .data(data, d => d.data);
+  let circs = g.selectAll('circle')
+    .data(data, d => d.month);
   // REMOVE
-  rects.exit()
+  circs.exit()
     .attr('fill', 'red')
     .transition(t)
-    .attr('y', y(0))
-    .attr('height', 0)
+    .attr('cy', y(0))
     .remove();
 
   // UPDATE
-  // rects.transition(t)
+  // circs.transition(t)
  
   // ENTER
-  rects.enter()
-    .append('rect')
+  circs.enter()
+    .append('circle')
     .attr('fill', 'green')
-    .attr('y', y(0))
-    .attr('height', 0)
-    .attr('x', elm => x(elm.month))
-    .attr('width', x.bandwidth)
-    .merge(rects)
+    .attr('cy', y(0))
+    .attr('cx', elm => x(elm.month) + x.bandwidth() / 2)
+    .attr('r', 5)
+    .merge(circs)
     .transition(t)
-      .attr('x', elm => x(elm.month))
-      .attr('y', elm => y(elm[val]))
-      .attr('width', x.bandwidth)
-      .attr('height', elm => height - y(elm[val]));
+      .attr('cx', elm => x(elm.month) + x.bandwidth() / 2)
+      .attr('cy', elm => y(elm[val]))
   
   yText = val.slice(0, 1).toLocaleUpperCase() + val.slice(1);
   yLabel.text(yText);
