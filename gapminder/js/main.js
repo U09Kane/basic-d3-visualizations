@@ -22,12 +22,21 @@ const yAxisGroup = g.append('g')
 const x = d3.scaleLog()
   .domain([300, 150000])
   .range([0, width]);
+
 const y = d3.scaleLinear()
   .domain([0, 90])
   .range([height, 0]);
+
 const c = d3.scaleOrdinal()
   .domain(['asia', 'americas', 'europe', 'africa'])
   .range(d3.schemeCategory10);
+
+const sizeScale = d3.scaleLinear()
+  .domain([0, 2000000000])
+  .range([3, 10]);
+
+g.append('text')
+  .attr('class', 'year-label')
 
 // X Label
 g.append('text')
@@ -36,17 +45,25 @@ g.append('text')
   .attr('y', height + 80)
   .attr('font-size', '20px')
   .attr('text-anchor', 'middle')
-  .text('Life Expectency (years)');
+  .text('GDP Per Capita ($)');
 
 // Y Label
-yLabel = g.append('text')
+g.append('text')
   .attr('class', 'y-label')
   .attr('x', - (height / 2))
   .attr('y', - 60)
   .attr('font-size', '20px')
   .attr('text-anchor', 'middle')
   .attr('transform', 'rotate(-90)')
-  .text('GDP Per Capita ($)');
+  .text('Life Expectency (years)');
+
+const yearLabel = g.append('text')
+  .attr('class', 'year-label')
+  .attr('x', width - 50)
+  .attr('y', height - 25)
+  .attr('font-size', '20px')
+  .attr('text-anchor', 'middle')
+  .text('YEAR');
 
 d3.json('data/data.json').then(data => {
     // let curData = data[0].countries;
@@ -55,22 +72,24 @@ d3.json('data/data.json').then(data => {
     let curData = data[idx].countries;
 
     const timer = d3.interval(() => {
-      let curData = data[idx].countries;
-      curData = curData.filter(d => d.income && d.life_exp);
+      let curData = filterData(data[idx].countries);
       let curYear = data[idx].year;
 
       update(curData, curYear);
-
       idx == last ? timer.stop() : null;
       idx += 1;
 
     }, 500);
 
     // First Update
-    update(curData);
+    update(filterData(curData));
 
 }).catch(error => console.log(error));
 
+function filterData(data) {
+  let result = data.filter(d => d.income && d.life_exp && d.population);
+  return result;
+}
 
 function update(data, year) {
   const xAxisCall = d3.axisBottom(x)
@@ -79,21 +98,23 @@ function update(data, year) {
 
   xAxisGroup.call(xAxisCall);
   yAxisGroup.call(yAxisCall);
+  yearLabel.text(year);
     
   const circs = g.selectAll('circle')
     .data(data, d => d.country);
-  
+
   circs.exit()
     .remove();
 
   circs.enter()
     .append('circle')
     .attr('fill', d => c(d.continent))
-    .attr('cy', y(0))
     .attr('cx', d => x(d.income))
-    .attr('r', 5)
+    .attr('cy', d => x(d.life_exp))
+    .attr('r', d => sizeScale(d.population))
     .merge(circs)
     .transition(t)
       .attr('cx', d => x(d.income))
-      .attr('cy', d => y(d.life_exp));
+      .attr('cy', d => y(d.life_exp))
+      .attr('r', d => sizeScale(d.population));
 }
