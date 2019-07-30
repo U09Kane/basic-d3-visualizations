@@ -1,6 +1,7 @@
 const margin = {left: 100, right: 10, top: 10, bottom: 150};
 const width = 600 - margin.left - margin.right;
 const height = 400 - margin.top - margin.bottom;
+const continents = ['asia', 'americas', 'europe', 'africa'];
 const t = d3.transition()
 
 
@@ -28,7 +29,7 @@ const y = d3.scaleLinear()
   .range([height, 0]);
 
 const c = d3.scaleOrdinal()
-  .domain(['asia', 'americas', 'europe', 'africa'])
+  .domain(continents)
   .range(d3.schemeCategory10);
 
 const sizeScale = d3.scaleLinear()
@@ -64,6 +65,20 @@ const yearLabel = g.append('text')
   .attr('font-size', '20px')
   .attr('text-anchor', 'middle')
   .text('YEAR');
+
+// Create Legend
+const legend = g.append('g')
+  .attr('transform', `translate(${width - 10}, ${height - 125})`);
+
+continents.forEach(elm, idx => {
+  let legendRow = legend.append('g')
+    .attr('transform', `translate(0, ${i * 20})`);
+  
+  legendRow.append('rect')
+    .attr('height', 10)
+    .attr('width', 10)
+    .attr('fill', c(cont));
+});
 
 d3.json('data/data.json').then(data => {
     // let curData = data[0].countries;
